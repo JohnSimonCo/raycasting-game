@@ -1,0 +1,283 @@
+//http://www.permadi.com/tutorial/raycast/rayc9.html
+//http://dev.opera.com/articles/3d-games-with-canvas-and-raycasting-part-1/
+//http://www.benjoffe.com/script/canvascape/main.js
+
+function Vec2(x, y) {
+	this.x = x;
+	this.y = y;
+}
+
+function Map(tiles, tileWidth, tileHeight) {
+	this.tiles = tiles;
+	this.tileWidth = tileWidth;
+	this.tileHeight = tileHeight;
+	this.width = tiles.length * tileWidth;
+	this.height = tiles[0].length * tileHeight;
+}
+Map.prototype = {
+	tileAt: function(x, y) {
+		return this.tiles[Math.floor(y / this.tileHeight)][Math.floor(x / this.tileWidth)];
+	},
+	tilePos: function(x, y) {
+		return new Vec2(x * this.tileWidth, y * this.tileHeight);
+	},
+	inBoundsX: function(x) {
+		return x > 0 && x < this.width;
+	},
+	inBoundsY: function(y) {
+		return y > 0 && y < this.height;
+	},
+	inBounds: function(x, y) {
+		return this.inBoundsX(x) && this.inBoundsY(y);
+	}
+}
+$.extend(Map, {
+	convert: function(x, y, map1, map2) {
+		var scale = map1 / map2;
+		return new Vec2(scale * x, scale * y);
+	}
+});
+
+function RayCastHit(origin, pos, v, tile) {
+	this.origin = origin;
+	this.pos = pos;
+	this.v = v;
+	this.tile = tile;
+}
+RayCastHit.prototype = {
+	render: function(ctx) {
+		ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+		ctx.beginPath();
+		ctx.moveTo(this.origin.x, this.origin.y);
+		ctx.lineTo(this.pos.x, this.pos.y);
+		ctx.stroke();
+	},
+	dist: function() {
+		return (this._dist = this._dist ||
+			// Math.sqrt(
+			// 	Math.pow(this.origin.x - this.pos.x, 2) +
+			// 	Math.pow(this.origin.y - this.pos.y, 2)
+			// )
+			Math.abs((this.origin.x - this.pos.x) / Math.cos(this.v))
+		);
+	},
+	realDist: function(offset) {
+		return this.dist() * Math.cos(offset);
+	}
+}
+
+var Math2 = {
+	clamp: function(a, min, max) {
+		return Math.min(Math.max(a, min), max)
+	}
+}
+
+function Canvas(selector) {
+	var $canvas = $(selector),
+		canvas = $canvas[0],
+		ctx = canvas.getContext('2d');
+
+	this.$canvas = $canvas;
+	this.canvas = canvas;
+	this.ctx = ctx;
+	this.render = function(fn) {
+		fn(ctx, canvas, $canvas);
+	}
+}
+
+var map = new Map([
+	[1,1,1,1,1,1,1,1,1,1,1,1],
+	[1,1,1,1,1,1,1,1,1,1,1,1],
+	[1,1,1,1,1,1,1,1,1,1,1,1],
+	[1,1,1,1,1,0,0,1,1,1,1,1],
+	[1,1,1,0,0,0,0,0,1,1,1,1],
+	[1,1,1,0,1,0,0,0,0,1,1,1],
+	[1,1,1,0,0,0,0,0,1,1,1,1],
+	[1,1,0,0,1,0,0,1,1,1,1,1],
+	[1,1,1,1,1,1,0,1,1,1,1,1],
+	[1,1,1,1,1,1,0,1,1,1,1,1],
+	[1,1,1,1,1,1,0,1,1,1,1,1],
+	[1,1,1,1,1,1,0,1,1,1,1,1],
+],
+32, 32);
+
+var minimap = new Map(map.tiles, 20, 20);
+minimap.scale = {
+	x: minimap.width / map.width,
+	y: minimap.height / map.height
+};
+
+var player = $.extend(
+	new Vec2(
+		map.tileWidth * map.tiles.length / 2,
+		map.tileHeight * map.tiles[0].length / 2
+	), {
+		view: Math.PI / 180 * 90		
+	}
+);
+
+
+var canvases = {
+	game: new Canvas('#game'),
+	minimap: new Canvas('#minimap')
+}
+
+var screen = {
+	width: 640,
+	height: 400,
+	fov: Math.PI / 180 * 60
+}
+screen.halfWidth =  screen.width / 2;
+screen.halfHeight =  screen.height / 2;
+screen.halfFov =  screen.fov / 2;
+screen.dist = screen.halfWidth / Math.tan(screen.halfFov);
+screen.viewStep = screen.fov / screen.width;
+
+var inputManager = new InputManager({
+	keydown: {
+		37: {
+			event: 'rotate',
+			data: 1
+		},
+		39: {
+			event: 'rotate',
+			data: -1
+		},
+		38: {
+			event: 'move',
+			data: 1
+		},
+		40: {
+			event: 'move',
+			data: -1
+		}
+	}
+});
+
+inputManager.on('rotate', function(data) {
+	player.view = player.view + data * Math.PI / 180 * 10;
+	render();
+});
+inputManager.on('move', function(data) {
+	player.x += -Math.cos(player.view) * data * 2;
+	player.y += Math.sin(player.view) * data * 2;
+	render();
+});
+
+function render() {
+	canvases.game.render(function(ctx, canvas) {
+		ctx.fillStyle = '#fff';
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+	});
+
+	canvases.minimap.render(function(ctx, canvas) {
+		ctx.fillStyle = '#fff';
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+		ctx.fillStyle = '#ccc';
+		var x = 0, y, tile, pos;
+		for(; x < minimap.tiles.length; x++) {
+			for(y = 0; y < minimap.tiles[0].length; y++) {
+				tile = minimap.tiles[y][x];
+				if(tile) {
+					pos = minimap.tilePos(x, y);	
+					ctx.fillRect(pos.x, pos.y, minimap.tileWidth, minimap.tileHeight);
+				}
+			}
+		}
+
+		ctx.fillStyle = "#f00";
+		ctx.fillRect(minimap.scale.x * player.x - 2, minimap.scale.y * player.y - 2, 4, 4);
+	});
+
+	var x = 0, offset, v;
+
+	for(; x < screen.width; x++) {
+		offset = -screen.halfFov + screen.viewStep * x;
+		v = (player.view + offset) % (Math.PI * 2);
+		if((hit = rayCast(player, v))) {
+			canvases.minimap.render(function(ctx) {
+				ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+				ctx.beginPath();
+				ctx.moveTo(hit.origin.x * minimap.scale.x, hit.origin.y * minimap.scale.y);
+				ctx.lineTo(hit.pos.x * minimap.scale.x, hit.pos.y * minimap.scale.y);
+				ctx.stroke();
+			});
+			canvases.game.render(function(ctx) {
+				var dist = hit.realDist(offset),
+					height = map.tileHeight / dist * screen.dist,
+					position = screen.halfHeight - height / 2;
+
+				ctx.fillStyle = '#00f';
+				ctx.fillRect(x, position, 1, height);
+				ctx.fillStyle = 'rgba(0,0,0,' + dist / 150 + ')';
+				ctx.fillRect(x, position, 1, height);
+			});
+		}
+	}
+}
+function rayCast(o, v) {
+	var tanV = Math.tan(v),
+		hitX = rayCastX(o, v, tanV, map.tileWidth, map.tileHeight),
+		hitY = rayCastY(o, v, tanV, map.tileWidth, map.tileHeight)
+
+	if(hitX || hitY) {
+		return hitX && hitY
+			? hitX.dist() < hitY.dist() ? hitX : hitY
+			: hitX ? hitX : hitY;
+	}
+}
+function rayCastX(o, v, tanV, Tx, Ty) {
+	var up = v > Math.PI, tile, x, y;
+
+	//Look for adjacent tile
+	y = Math.floor(o.y / Ty) * Ty + (up ? -1 : Ty);
+
+	x = o.x + (o.y - y) / tanV;
+
+	//If it's out of bounds, return nothing
+	if(x <= 0 || x >= map.width) return;
+
+	tile = map.tileAt(x, y);
+
+	//Return the hit if there's a wall there
+	if(tile) return new RayCastHit(o, new Vec2(x, y), v, tile);
+
+	//Calculate step in x- and y-axis
+	var ya = up ? -Ty : Ty, xa = -ya / tanV;
+
+	//Check for hits within map
+	while(map.inBounds((x += xa), (y += ya))) {
+		tile = map.tileAt(x, y);
+		//If a wall is found, return the hit
+		if(tile) return new RayCastHit(o, new Vec2(x, y), v, tile);
+	}
+}
+function rayCastY(o, v, tanV, Tx, Ty) {
+	var right = v >= Math.PI * 0.5 && v < Math.PI * 1.5, tile, x, y;
+
+	//Look for adjacent tile
+	x = Math.floor(o.x / Tx) * Tx + (right ? Tx : -1);
+
+	y = o.y + (o.x - x) * tanV;
+
+	//If it's out of bounds, return nothing
+	if(y <= 0 || y >= map.height) return;
+
+	tile = map.tileAt(x, y);
+
+	//Return the hit if there's a wall there
+	if(tile) return new RayCastHit(o, new Vec2(x, y), v, tile);
+
+	//Calculate step in x- and y-axis
+	var xa = right ? Tx : -Tx, ya = -xa * tanV;
+
+	//Check for hits within map
+	while(map.inBounds((x += xa), (y += ya))) {
+		tile = map.tileAt(x, y);
+		//If a wall is found, return the hit
+		if(tile) return new RayCastHit(o, new Vec2(x, y), v, tile);
+	}
+}
+
+render();
