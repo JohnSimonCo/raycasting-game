@@ -99,9 +99,10 @@ var map = new Map([
 	[1,1,1,1,1,1,0,1,1,1,1,1],
 	[1,1,1,1,1,1,0,1,1,1,1,1],
 ],
-32, 32);
+16, 16);
 
-var minimap = new Map(map.tiles, 20, 20);
+var minimap = new Map(map.tiles, 10, 10);
+
 minimap.scale = {
 	x: minimap.width / map.width,
 	y: minimap.height / map.height
@@ -122,6 +123,10 @@ var canvases = {
 	minimap: new Canvas('#minimap')
 }
 
+$('button').click(function() {
+	canvases.game.canvas.webkitRequestPointerLock();
+});
+
 var screen = {
 	width: 640,
 	height: 400,
@@ -134,6 +139,9 @@ screen.dist = screen.halfWidth / Math.tan(screen.halfFov);
 screen.viewStep = screen.fov / screen.width;
 
 var inputManager = new InputManager({
+	mousemove: {
+		event: 'look'
+	},
 	keydown: {
 		37: {
 			event: 'rotate',
@@ -147,7 +155,15 @@ var inputManager = new InputManager({
 			event: 'move',
 			data: 1
 		},
+		87: {
+			event: 'move',
+			data: 1
+		},
 		40: {
+			event: 'move',
+			data: -1
+		},
+		83: {
 			event: 'move',
 			data: -1
 		}
@@ -156,13 +172,31 @@ var inputManager = new InputManager({
 
 inputManager.on('rotate', function(data) {
 	player.view = player.view + data * Math.PI / 180 * 10;
-	render();
 });
 inputManager.on('move', function(data) {
 	player.x += -Math.cos(player.view) * data * 2;
 	player.y += Math.sin(player.view) * data * 2;
-	render();
 });
+inputManager.on('look', function(data) {
+});
+
+var lastTime;
+function frame(time) {
+	var delta = lastTime ? time - lastTime : 0;
+
+	update(delta, time);
+
+	lastTime = time;
+	requestAnimationFrame(frame);
+}
+
+requestAnimationFrame(frame);
+
+function update(delta, time) {
+	render();
+}
+
+
 
 function render() {
 	canvases.game.render(function(ctx, canvas) {
@@ -176,9 +210,9 @@ function render() {
 
 		ctx.fillStyle = '#ccc';
 		var x = 0, y, tile, pos;
-		for(; x < minimap.tiles.length; x++) {
-			for(y = 0; y < minimap.tiles[0].length; y++) {
-				tile = minimap.tiles[y][x];
+		for(; x < map.tiles.length; x++) {
+			for(y = 0; y < map.tiles[0].length; y++) {
+				tile = map.tiles[y][x];
 				if(tile) {
 					pos = minimap.tilePos(x, y);	
 					ctx.fillRect(pos.x, pos.y, minimap.tileWidth, minimap.tileHeight);
@@ -191,11 +225,10 @@ function render() {
 	});
 
 	var x = 0, offset, v;
-
 	for(; x < screen.width; x++) {
 		offset = -screen.halfFov + screen.viewStep * x;
 		v = (player.view + offset) % (Math.PI * 2);
-		if((hit = rayCast(player, v))) {
+		if((hit = rayCast(player, v, map))) {
 			canvases.minimap.render(function(ctx) {
 				ctx.strokeStyle = 'rgba(0,0,0,0.05)';
 				ctx.beginPath();
@@ -216,10 +249,10 @@ function render() {
 		}
 	}
 }
-function rayCast(o, v) {
-	var tanV = Math.tan(v),
-		hitX = rayCastX(o, v, tanV, map.tileWidth, map.tileHeight),
-		hitY = rayCastY(o, v, tanV, map.tileWidth, map.tileHeight)
+function rayCast(origin, angle, map) {
+	var tanV = Math.tan(angle),
+		hitX = rayCastX(origin, angle, tanV, map.tileHeight, map),
+		hitY = rayCastY(origin, angle, tanV, map.tileWidth, map)
 
 	if(hitX || hitY) {
 		return hitX && hitY
@@ -227,7 +260,7 @@ function rayCast(o, v) {
 			: hitX ? hitX : hitY;
 	}
 }
-function rayCastX(o, v, tanV, Tx, Ty) {
+function rayCastX(o, v, tanV, Ty, map) {
 	var up = v > Math.PI, tile, x, y;
 
 	//Look for adjacent tile
@@ -236,7 +269,7 @@ function rayCastX(o, v, tanV, Tx, Ty) {
 	x = o.x + (o.y - y) / tanV;
 
 	//If it's out of bounds, return nothing
-	if(x <= 0 || x >= map.width) return;
+	// if(!map.inBounds(x, y)) return;
 
 	tile = map.tileAt(x, y);
 
@@ -253,7 +286,7 @@ function rayCastX(o, v, tanV, Tx, Ty) {
 		if(tile) return new RayCastHit(o, new Vec2(x, y), v, tile);
 	}
 }
-function rayCastY(o, v, tanV, Tx, Ty) {
+function rayCastY(o, v, tanV, Tx, map) {
 	var right = v >= Math.PI * 0.5 && v < Math.PI * 1.5, tile, x, y;
 
 	//Look for adjacent tile
@@ -262,7 +295,7 @@ function rayCastY(o, v, tanV, Tx, Ty) {
 	y = o.y + (o.x - x) * tanV;
 
 	//If it's out of bounds, return nothing
-	if(y <= 0 || y >= map.height) return;
+	// if(!map.inBounds(x, y)) return;
 
 	tile = map.tileAt(x, y);
 
@@ -279,5 +312,3 @@ function rayCastY(o, v, tanV, Tx, Ty) {
 		if(tile) return new RayCastHit(o, new Vec2(x, y), v, tile);
 	}
 }
-
-render();
