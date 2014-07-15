@@ -130,6 +130,7 @@ var map = new Map([
 16, 16);
 
 var minimap = new Map(map.tiles, 10, 10);
+// var minimap = new Map(map.tiles, 60, 60);
 
 minimap.scale = {
 	x: minimap.width / map.width,
@@ -302,15 +303,17 @@ function render() {
 		// offset = 0;
 		v = (player.view + offset) % (Math.PI * 2);
 		// canvases.minimap.render(function(ctx) {
-		// 	ctx.strokeStyle = 'rgb(255,0,0)';
+		// 	// ctx.strokeStyle = 'rgba(255,0,0,1)';
+		// 	ctx.strokeStyle = 'rgba(255,0,0,0.1)';
 		// 	ctx.beginPath();
 		// 	ctx.moveTo(player.x * minimap.scale.x, player.y * minimap.scale.y);
-		// 	ctx.lineTo(player.x * minimap.scale.x + Math.cos(v) * 100, player.y * minimap.scale.y + Math.sin(v) * 100);
+		// 	ctx.lineTo(player.x * minimap.scale.x + Math.cos(v) * 50, player.y * minimap.scale.y + Math.sin(v) * 50);
 		// 	ctx.stroke();
 		// });
 		if((hit = rayCast(player, v, map))) {
 			canvases.minimap.render(function(ctx) {
-				ctx.strokeStyle = 'rgba(0,0,0,1)';
+				// ctx.strokeStyle = 'rgba(0,0,0,1)';
+				ctx.strokeStyle = 'rgba(0,0,0,0.1)';
 				ctx.beginPath();
 				ctx.moveTo(hit.origin.x * minimap.scale.x, hit.origin.y * minimap.scale.y);
 				ctx.lineTo(hit.pos.x * minimap.scale.x, hit.pos.y * minimap.scale.y);
@@ -321,9 +324,9 @@ function render() {
 					height = map.tileHeight / dist * screen.dist,
 					position = screen.halfHeight - height / 2;
 
-				ctx.fillStyle = '#00f';
+				ctx.fillStyle = '#3f51b5';
 				ctx.fillRect(x, position, 1, height);
-				ctx.fillStyle = 'rgba(0,0,0,' + dist / 150 + ')';
+				ctx.fillStyle = 'rgba(0,0,0,' + dist / 200 + ')';
 				ctx.fillRect(x, position, 1, height);
 			});
 		}
@@ -340,20 +343,42 @@ function rayCast(origin, angle, map) {
 			: hitX ? hitX : hitY;
 	}
 }
+// function rayCast(origin, angle, map) {
+// 	var tanV = Math.tan(angle),
+// 		hitX = rayCastX(origin, angle, tanV, map.tileHeight, map);
+// 		// hitY = rayCastY(origin, angle, tanV, map.tileWidth, map);
+
+// 	// if(hitX || hitY) {
+// 		// return hitX && hitY
+// 			// ? hitX.dist() < hitY.dist() ? hitX : hitY
+// 			// : hitX ? hitX : hitY;
+// 	// }
+// 	return hitX;
+// }
+// function rayCast(origin, angle, map) {
+// 	var tanV = Math.tan(angle),
+// 		// hitX = rayCastX(origin, angle, tanV, map.tileHeight, map);
+// 		hitY = rayCastY(origin, angle, tanV, map.tileWidth, map);
+
+// 	// if(hitX || hitY) {
+// 		// return hitX && hitY
+// 			// ? hitX.dist() < hitY.dist() ? hitX : hitY
+// 			// : hitX ? hitX : hitY;
+// 	// }
+// 	return hitY;
+// }
 function rayCastX(o, v, tanV, Ty, map) {
-	var up = v > Math.PI, tile, x, y;
+	var up = v > Math.PI, tile, x, y, tileOffs = up ? 1 : 0;
 
 	//Look for adjacent tile
-	y = Math.floor(o.y / Ty) * Ty + (up ? -1 : Ty);
-
-	Math.floor(o.y / Ty) * Ty + (up ? -1 : Ty);
+	y = (up ? Math.floor : Math.ceil)(o.y / Ty) * Ty;
 
 	x = o.x - (o.y - y) / tanV;
 
 	//If it's out of bounds, return nothing
 	// if(!map.inBounds(x, y)) return;
 
-	tile = map.tileAt(x, y);
+	tile = map.tileAt(x, y - tileOffs);
 	debugHit(tile, x, y);
 
 	//Return the hit if there's a wall there
@@ -364,35 +389,37 @@ function rayCastX(o, v, tanV, Ty, map) {
 
 	//Check for hits within map
 	while(map.inBounds((x += xa), (y += ya))) {
-		tile = map.tileAt(x, y);
+		if(up) ++tileOffs;
+		tile = map.tileAt(x, y - tileOffs);
 		debugHit(tile, x, y);
 		//If a wall is found, return the hit
 		if(tile) return new RayCastHit(o, new Vec2(x, y), v, tile);
 	}
 }
 function rayCastY(o, v, tanV, Tx, map) {
-	var right = !(v >= Math.PI * 0.5 && v < Math.PI * 1.5), tile, x, y;
+	var left = v >= Math.PI * 0.5 && v < Math.PI * 1.5, tile, x, y, tileOffs = left ? 1 : 0;
 
 	//Look for adjacent tile
-	x = Math.floor(o.x / Tx) * Tx + (right ? Tx : -1);
+	x = (left ? Math.floor : Math.ceil)(o.x / Tx) * Tx;
 
 	y = o.y - (o.x - x) * tanV;
 
 	//If it's out of bounds, return nothing
 	// if(!map.inBounds(x, y)) return;
 
-	tile = map.tileAt(x, y);
+	tile = map.tileAt(x - tileOffs, y);
 	debugHit(tile, x, y);
 
 	//Return the hit if there's a wall there
 	if(tile) return new RayCastHit(o, new Vec2(x, y), v, tile);
 
 	//Calculate step in x- and y-axis
-	var xa = right ? Tx : -Tx, ya = xa * tanV;
+	var xa = left ? -Tx : Tx, ya = xa * tanV;
 
 	//Check for hits within map
 	while(map.inBounds((x += xa), (y += ya))) {
-		tile = map.tileAt(x, y);
+		if(left) ++tileOffs;
+		tile = map.tileAt(x - tileOffs, y);
 		debugHit(tile, x, y);
 		
 		//If a wall is found, return the hit
@@ -403,6 +430,6 @@ function rayCastY(o, v, tanV, Tx, map) {
 function debugHit(tile, x, y) {
 	// canvases.minimap.render(function(ctx) {
 	// 	ctx.fillStyle = tile ? '#0f0' : '#f00';
-	// 	ctx.fillRect(x * minimap.scale.x, y * minimap.scale.y, 1, 1);
+	// 	ctx.fillRect(x * minimap.scale.x - 1, y * minimap.scale.y - 1, 2, 2);
 	// });
 }
