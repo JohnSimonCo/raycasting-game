@@ -47,11 +47,11 @@
 		_mouseMoveHandler: function(e) {
 			var obj = this.map.mousemove;
 			if(obj) {
-				var data = {
+				var data = $.extend(e, {
 					x: (e.layerX || e.layerX == 0) ? e.layerX : e.offsetX,
 					y:  e.layerX ? e.layerY : e.offsetY,
 					target: e.target
-				};
+				});
 				this.emit(obj.event, data);
 			}
 		},
