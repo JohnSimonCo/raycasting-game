@@ -14,7 +14,7 @@ function Player(x, y) {
 $.extend(Player.prototype, Vec2.prototype, {
 	update: function(delta, time) {
 		if(input.mouseDelta) {
-			this.view += input.mouseDelta * 0.05;
+			this.view += input.mouseDelta * 0.01;
 			if(this.view <= 0) {
 				this.view = Math.PI * 2;
 			}
@@ -22,12 +22,12 @@ $.extend(Player.prototype, Vec2.prototype, {
 		}
 
 		if(input.moveUpDown) {
-			player.x += Math.cos(player.view) * input.moveUpDown * 2;
-			player.y += Math.sin(player.view) * input.moveUpDown * 2;
+			player.x += Math.cos(player.view) * input.moveUpDown * 1;
+			player.y += Math.sin(player.view) * input.moveUpDown * 1;
 		}
 		if(input.moveRightLeft) {
-			player.x -= Math.cos(player.view + Math.PI * 0.5) * input.moveRightLeft * 2;
-			player.y -= Math.sin(player.view + Math.PI * 0.5) * input.moveRightLeft * 2;
+			player.x -= Math.cos(player.view + Math.PI * 0.5) * input.moveRightLeft * 1;
+			player.y -= Math.sin(player.view + Math.PI * 0.5) * input.moveRightLeft * 1;
 		}
 
 
