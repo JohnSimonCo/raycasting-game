@@ -4,3 +4,7 @@
 	left: 20px;
 	z-index: 1;
 }
+#debug {
+	position: absolute;
+	bottom: 0;
+}

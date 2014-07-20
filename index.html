@@ -7,15 +7,11 @@
 	<script type="text/javascript" src="angular.js"></script>
 	<script type="text/javascript" src="inputmanager.js"></script>
 </head>
-<body ng-controller="controller">
+<body>
 	<canvas id="game" width="640px" height="400px"></canvas>
 	<canvas id="minimap" width="120px" height="120px"></canvas>
+	<pre id="debug"></pre>
 	<!-- <canvas id="minimap" width="720px" height="720px"></canvas> -->
-	<div>
-		<button ng-click="decrement()">&lt;</button>
-		<span ng-bind="v"></span>
-		<button ng-click="increment()">&gt;</button>
-	</div>
 	<script type="text/javascript" src="script.js"></script>
 </body>
 </html>

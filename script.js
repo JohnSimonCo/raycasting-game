@@ -15,22 +15,29 @@ $.extend(Player.prototype, Vec2.prototype, {
 	update: function(delta, time) {
 		if(input.mouseDelta) {
 			this.view += input.mouseDelta * 0.01;
-			if(this.view <= 0) {
-				this.view = Math.PI * 2;
-			}
 			input.mouseDelta = 0;
 		}
 
-		if(input.moveUpDown) {
-			player.x += Math.cos(player.view) * input.moveUpDown * 1;
-			player.y += Math.sin(player.view) * input.moveUpDown * 1;
-		}
-		if(input.moveRightLeft) {
-			player.x -= Math.cos(player.view + Math.PI * 0.5) * input.moveRightLeft * 1;
-			player.y -= Math.sin(player.view + Math.PI * 0.5) * input.moveRightLeft * 1;
+		if(input.rotate) {
+			this.view += input.rotate * Math.PI / 180 * 5;
 		}
 
-
+		if(input.moveUpDown || input.moveUpDown === 0) {
+			var v = (player.view + input.moveUpDown) % (Math.PI * 2),
+				hit = rayCast(this, v, map),
+				speed = hit ? Math.min(1, hit.dist() - 0.001) : 1;
+			// player.y -= input.moveUpDown;
+			player.x += Math.cos(v) * speed;
+			player.y += Math.sin(v) * speed;
+		}
+		if(input.moveRightLeft || input.moveRightLeft === 0) {
+			var v = (player.view + input.moveRightLeft) % (Math.PI * 2),
+				hit = rayCast(this, v, map),
+				speed = hit ? Math.min(1, hit.dist() - 0.001) : 1;
+			// player.y -= input.moveUpDown;
+			player.x += Math.cos(v) * speed;
+			player.y += Math.sin(v) * speed;
+		}
 	}
 });
 
@@ -42,21 +49,25 @@ function Map(tiles, tileWidth, tileHeight) {
 	this.height = tiles[0].length * tileHeight;
 }
 Map.prototype = {
-	tileAt: function(x, y) {
-		if(this.tiles[Math.floor(y / this.tileHeight)])
-		return this.tiles[Math.floor(y / this.tileHeight)][Math.floor(x / this.tileWidth)];
+	//eX and eY = point in entity coordinate-system 
+	tileAt: function(eX, eY) {
+		return (this.tiles[Math.floor(eY / this.tileHeight)] || {})[Math.floor(eX / this.tileWidth)];
 	},
-	tilePos: function(x, y) {
-		return new Vec2(x * this.tileWidth, y * this.tileHeight);
+	//tX and tY = point in tile coordinate-system 
+	getTile: function(tX, tY) {
+		return this.tiles[tY][tX];
 	},
-	inBoundsX: function(x) {
-		return x > 0 && x < this.width;
+	tilePos: function(tX, tY) {
+		return new Vec2(tX * this.tileWidth, tY * this.tileHeight);
 	},
-	inBoundsY: function(y) {
-		return y > 0 && y < this.height;
+	inBoundsX: function(eX) {
+		return eX > 0 && eX < this.width;
 	},
-	inBounds: function(x, y) {
-		return this.inBoundsX(x) && this.inBoundsY(y);
+	inBoundsY: function(eY) {
+		return eY > 0 && eY < this.height;
+	},
+	inBounds: function(eX, eY) {
+		return this.inBoundsX(eX) && this.inBoundsY(eY);
 	}
 }
 $.extend(Map, {
@@ -82,11 +93,11 @@ RayCastHit.prototype = {
 	},
 	dist: function() {
 		return (this._dist = this._dist ||
-			// Math.sqrt(
-			// 	Math.pow(this.origin.x - this.pos.x, 2) +
-			// 	Math.pow(this.origin.y - this.pos.y, 2)
-			// )
-			Math.abs((this.origin.x - this.pos.x) / Math.cos(this.v))
+			Math.sqrt(
+				Math.pow(this.origin.x - this.pos.x, 2) +
+				Math.pow(this.origin.y - this.pos.y, 2)
+			)
+			// Math.abs((this.origin.x - this.pos.x) / Math.cos(this.v))
 		);
 	},
 	realDist: function(offset) {
@@ -115,22 +126,22 @@ function Canvas(selector) {
 
 var map = new Map([
 	[1,1,1,1,1,1,1,1,1,1,1,1],
-	[1,1,1,1,1,1,1,1,1,1,1,1],
-	[1,1,1,1,1,1,1,1,1,1,1,1],
-	[1,1,1,1,1,0,0,1,1,1,1,1],
-	[1,1,1,0,0,0,0,0,1,1,1,1],
+	[1,1,1,0,0,0,1,1,1,1,1,1],
+	[1,1,0,0,0,0,1,0,0,1,1,1],
+	[1,1,0,1,1,0,0,0,0,1,1,1],
+	[1,1,0,0,0,0,0,0,1,1,1,1],
 	[1,1,1,0,1,0,0,0,0,1,1,1],
-	[1,1,1,0,0,0,0,0,1,1,1,1],
-	[1,1,0,0,1,0,0,1,1,1,1,1],
+	[1,1,0,0,0,0,0,0,0,1,1,1],
+	[1,1,0,0,1,0,0,1,0,1,1,1],
+	[1,1,1,1,1,1,0,1,0,0,1,1],
 	[1,1,1,1,1,1,0,1,1,1,1,1],
 	[1,1,1,1,1,1,0,1,1,1,1,1],
-	[1,1,1,1,1,1,0,1,1,1,1,1],
-	[1,1,1,1,1,1,0,1,1,1,1,1],
+	[1,1,1,1,1,1,1,1,1,1,1,1],
 ],
 16, 16);
 
 var minimap = new Map(map.tiles, 10, 10);
-// var minimap = new Map(map.tiles, 60, 60);
+// var minimap = new Map(map.tiles, 40, 40);
 
 minimap.scale = {
 	x: minimap.width / map.width,
@@ -166,38 +177,38 @@ var inputManager = new InputManager({
 	keydown: {
 		38: {
 			event: 'moveUpDown',
-			data: 1
+			data: 0
 		},
 		87: {
 			event: 'moveUpDown',
-			data: 1
+			data: 0
 		},
 		40: {
 			event: 'moveUpDown',
-			data: -1
+			data: Math.PI
 		},
 		83: {
 			event: 'moveUpDown',
-			data: -1
-		},
-		37: {
-			event: 'moveRightLeft',
-			data: 1
+			data: Math.PI
 		},
 		65: {
 			event: 'moveRightLeft',
-			data: 1
-		},
-		39: {
-			event: 'moveRightLeft',
-			data: -1
+			data: Math.PI * 1.5
 		},
 		68: {
 			event: 'moveRightLeft',
-			data: -1
+			data: Math.PI * 0.5
 		},
 		70: {
 			event: 'fullscreen'
+		},
+		37: {
+			event: 'rotate',
+			data: -1
+		},
+		39: {
+			event: 'rotate',
+			data: 1
 		}
 	},
 	keyup: {
@@ -224,13 +235,22 @@ var inputManager = new InputManager({
 		},
 		68: {
 			event: 'stopMoveRightLeft',
+		},
+		37: {
+			event: 'stopRotate'
+		},
+		39: {
+			event: 'stopRotate'
 		}
 	}
 });
 
 var input = {};
 inputManager.on('rotate', function(data) {
-	player.view = player.view + data * Math.PI / 180 * 10;
+	input.rotate = data;
+});
+inputManager.on('stopRotate', function(data) {
+	input.rotate = null;
 });
 inputManager.on('moveUpDown', function(data) {
 	input.moveUpDown = data;
@@ -239,13 +259,14 @@ inputManager.on('moveRightLeft', function(data) {
 	input.moveRightLeft = data;
 });
 inputManager.on('stopMoveUpDown', function(data) {
-	input.moveUpDown = 0;
+	input.moveUpDown = null;
 });
 inputManager.on('stopMoveRightLeft', function(data) {
-	input.moveRightLeft = 0;
+	input.moveRightLeft = null;
 });
 inputManager.on('fullscreen', function(data) {
 	canvases.game.canvas.webkitRequestPointerLock();
+	// canvases.game.canvas.webkitRequestFullscreen();
 });
 inputManager.on('look', function(data) {
 	input.mouseDelta = data.originalEvent.webkitMovementX;
@@ -297,14 +318,14 @@ function render() {
 	});
 
 	var x = 0, offset, v;
-	
 	for(; x < screen.width; x++) {
 		offset = -screen.halfFov + screen.viewStep * x;
 		// offset = 0;
 		v = (player.view + offset) % (Math.PI * 2);
+		debug(v + '\n' + Math.abs(v * 180 / Math.PI));
 		// canvases.minimap.render(function(ctx) {
-		// 	// ctx.strokeStyle = 'rgba(255,0,0,1)';
-		// 	ctx.strokeStyle = 'rgba(255,0,0,0.1)';
+		// 	ctx.strokeStyle = 'rgba(255,0,0,1)';
+		// 	// ctx.strokeStyle = 'rgba(255,0,0,0.1)';
 		// 	ctx.beginPath();
 		// 	ctx.moveTo(player.x * minimap.scale.x, player.y * minimap.scale.y);
 		// 	ctx.lineTo(player.x * minimap.scale.x + Math.cos(v) * 50, player.y * minimap.scale.y + Math.sin(v) * 50);
@@ -313,7 +334,7 @@ function render() {
 		if((hit = rayCast(player, v, map))) {
 			canvases.minimap.render(function(ctx) {
 				// ctx.strokeStyle = 'rgba(0,0,0,1)';
-				ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+				ctx.strokeStyle = 'rgba(0,0,0,0.05)';
 				ctx.beginPath();
 				ctx.moveTo(hit.origin.x * minimap.scale.x, hit.origin.y * minimap.scale.y);
 				ctx.lineTo(hit.pos.x * minimap.scale.x, hit.pos.y * minimap.scale.y);
@@ -325,8 +346,9 @@ function render() {
 					position = screen.halfHeight - height / 2;
 
 				ctx.fillStyle = '#3f51b5';
+				// ctx.fillStyle = '#fff';
 				ctx.fillRect(x, position, 1, height);
-				ctx.fillStyle = 'rgba(0,0,0,' + dist / 200 + ')';
+				ctx.fillStyle = 'rgba(0,0,0,' + dist / 150 + ')';
 				ctx.fillRect(x, position, 1, height);
 			});
 		}
@@ -334,14 +356,17 @@ function render() {
 }
 function rayCast(origin, angle, map) {
 	var tanV = Math.tan(angle),
-		hitX = rayCastX(origin, angle, tanV, map.tileHeight, map),
-		hitY = rayCastY(origin, angle, tanV, map.tileWidth, map);
+		absV = Math.abs(angle),
+		hitX = rayCastX(origin, angle, tanV, absV, map.tileHeight, map),
+		hitY = rayCastY(origin, angle, tanV, absV, map.tileWidth, map);
 
 	if(hitX || hitY) {
 		return hitX && hitY
 			? hitX.dist() < hitY.dist() ? hitX : hitY
 			: hitX ? hitX : hitY;
 	}
+	// return hitX;
+	// return hitY;
 }
 // function rayCast(origin, angle, map) {
 // 	var tanV = Math.tan(angle),
@@ -367,8 +392,9 @@ function rayCast(origin, angle, map) {
 // 	// }
 // 	return hitY;
 // }
-function rayCastX(o, v, tanV, Ty, map) {
-	var up = v > Math.PI, tile, x, y, tileOffs = up ? 1 : 0;
+
+function rayCastX(o, v, tanV, absV, Ty, map) {
+	var up = v < 0 && v > -Math.PI || v > Math.PI, tile, x, y, tileOffs = up ? 1 : 0;
 
 	//Look for adjacent tile
 	y = (up ? Math.floor : Math.ceil)(o.y / Ty) * Ty;
@@ -389,15 +415,15 @@ function rayCastX(o, v, tanV, Ty, map) {
 
 	//Check for hits within map
 	while(map.inBounds((x += xa), (y += ya))) {
-		if(up) ++tileOffs;
 		tile = map.tileAt(x, y - tileOffs);
 		debugHit(tile, x, y);
 		//If a wall is found, return the hit
 		if(tile) return new RayCastHit(o, new Vec2(x, y), v, tile);
 	}
 }
-function rayCastY(o, v, tanV, Tx, map) {
-	var left = v >= Math.PI * 0.5 && v < Math.PI * 1.5, tile, x, y, tileOffs = left ? 1 : 0;
+
+function rayCastY(o, v, tanV, absV, Tx, map) {
+	var left = absV > Math.PI * 0.5 && absV < Math.PI * 1.5, tile, x, y, tileOffs = left ? 1 : 0;
 
 	//Look for adjacent tile
 	x = (left ? Math.floor : Math.ceil)(o.x / Tx) * Tx;
@@ -418,7 +444,6 @@ function rayCastY(o, v, tanV, Tx, map) {
 
 	//Check for hits within map
 	while(map.inBounds((x += xa), (y += ya))) {
-		if(left) ++tileOffs;
 		tile = map.tileAt(x - tileOffs, y);
 		debugHit(tile, x, y);
 		
@@ -430,6 +455,9 @@ function rayCastY(o, v, tanV, Tx, map) {
 function debugHit(tile, x, y) {
 	// canvases.minimap.render(function(ctx) {
 	// 	ctx.fillStyle = tile ? '#0f0' : '#f00';
-	// 	ctx.fillRect(x * minimap.scale.x - 1, y * minimap.scale.y - 1, 2, 2);
+	// 	ctx.fillRect(x * minimap.scale.x - 2, y * minimap.scale.y - 2, 4, 4);
 	// });
+}
+function debug(text) {
+	// $('#debug').text(text);
 }
