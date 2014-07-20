@@ -10,6 +10,7 @@ function Vec2(x, y) {
 function Player(x, y) {
 	Vec2.call(this, x, y);
 	this.view = Math.PI / 180 * 90;
+	this.speed = 1;
 }
 $.extend(Player.prototype, Vec2.prototype, {
 	update: function(delta, time) {
@@ -22,22 +23,21 @@ $.extend(Player.prototype, Vec2.prototype, {
 			this.view += input.rotate * Math.PI / 180 * 5;
 		}
 
-		if(input.moveUpDown || input.moveUpDown === 0) {
-			var v = (player.view + input.moveUpDown) % (Math.PI * 2),
-				hit = rayCast(this, v, map),
-				speed = hit ? Math.min(1, hit.dist() - 0.001) : 1;
-			// player.y -= input.moveUpDown;
-			player.x += Math.cos(v) * speed;
-			player.y += Math.sin(v) * speed;
+		if(input.move || input.move === 0) {
+			this.move((this.view + input.move) % (Math.PI * 2));
 		}
-		if(input.moveRightLeft || input.moveRightLeft === 0) {
-			var v = (player.view + input.moveRightLeft) % (Math.PI * 2),
-				hit = rayCast(this, v, map),
-				speed = hit ? Math.min(1, hit.dist() - 0.001) : 1;
-			// player.y -= input.moveUpDown;
-			player.x += Math.cos(v) * speed;
-			player.y += Math.sin(v) * speed;
+		if(input.strafe || input.strafe === 0) {
+			this.move((this.view + input.strafe) % (Math.PI * 2));
 		}
+	},
+	move: function(angle) {
+		var prevX = this.x;
+		var prevY = this.y;
+		var hit = rayCast(this, angle, map),
+			speed = hit ? Math.min(this.speed, hit.dist() - Math2.epsilon) : this.speed;
+		
+		this.x += Math.cos(angle) * speed;
+		this.y += Math.sin(angle) * speed;
 	}
 });
 
@@ -108,7 +108,9 @@ RayCastHit.prototype = {
 var Math2 = {
 	clamp: function(a, min, max) {
 		return Math.min(Math.max(a, min), max)
-	}
+	},
+	//May be cause of errors in movement
+	epsilon: 0.1
 }
 
 function Canvas(selector) {
@@ -135,7 +137,7 @@ var map = new Map([
 	[1,1,0,0,1,0,0,1,0,1,1,1],
 	[1,1,1,1,1,1,0,1,0,0,1,1],
 	[1,1,1,1,1,1,0,1,1,1,1,1],
-	[1,1,1,1,1,1,0,1,1,1,1,1],
+	[1,1,1,1,1,0,0,1,1,1,1,1],
 	[1,1,1,1,1,1,1,1,1,1,1,1],
 ],
 16, 16);
@@ -160,8 +162,10 @@ var canvases = {
 }
 
 var screen = {
-	width: 640,
-	height: 400,
+	// width: 640,
+	// height: 400,
+	width: 1280,
+	height: 800,
 	fov: Math.PI / 180 * 60
 }
 screen.halfWidth =  screen.width / 2;
@@ -176,27 +180,27 @@ var inputManager = new InputManager({
 	},
 	keydown: {
 		38: {
-			event: 'moveUpDown',
+			event: 'move',
 			data: 0
 		},
 		87: {
-			event: 'moveUpDown',
+			event: 'move',
 			data: 0
 		},
 		40: {
-			event: 'moveUpDown',
+			event: 'move',
 			data: Math.PI
 		},
 		83: {
-			event: 'moveUpDown',
+			event: 'move',
 			data: Math.PI
 		},
 		65: {
-			event: 'moveRightLeft',
+			event: 'strafe',
 			data: Math.PI * 1.5
 		},
 		68: {
-			event: 'moveRightLeft',
+			event: 'strafe',
 			data: Math.PI * 0.5
 		},
 		70: {
@@ -213,28 +217,28 @@ var inputManager = new InputManager({
 	},
 	keyup: {
 		38: {
-			event: 'stopMoveUpDown',
+			event: 'stopMove',
 		},
 		87: {
-			event: 'stopMoveUpDown',
+			event: 'stopMove',
 		},
 		40: {
-			event: 'stopMoveUpDown',
+			event: 'stopMove',
 		},
 		83: {
-			event: 'stopMoveUpDown',
+			event: 'stopMove',
 		},
 		37: {
-			event: 'stopMoveRightLeft',
+			event: 'stopMove',
 		},
 		65: {
-			event: 'stopMoveRightLeft',
+			event: 'stopStrafe',
 		},
 		39: {
-			event: 'stopMoveRightLeft',
+			event: 'stopMove',
 		},
 		68: {
-			event: 'stopMoveRightLeft',
+			event: 'stopStrafe',
 		},
 		37: {
 			event: 'stopRotate'
@@ -252,14 +256,17 @@ inputManager.on('rotate', function(data) {
 inputManager.on('stopRotate', function(data) {
 	input.rotate = null;
 });
-inputManager.on('moveUpDown', function(data) {
-	input.moveUpDown = data;
+inputManager.on('move', function(data) {
+	input.move = data;
 });
-inputManager.on('moveRightLeft', function(data) {
-	input.moveRightLeft = data;
+inputManager.on('stopMove', function(data) {
+	input.move = null;
 });
-inputManager.on('stopMoveUpDown', function(data) {
-	input.moveUpDown = null;
+inputManager.on('strafe', function(data) {
+	input.strafe = data;
+});
+inputManager.on('stopStrafe', function(data) {
+	input.strafe = null;
 });
 inputManager.on('stopMoveRightLeft', function(data) {
 	input.moveRightLeft = null;
@@ -322,7 +329,6 @@ function render() {
 		offset = -screen.halfFov + screen.viewStep * x;
 		// offset = 0;
 		v = (player.view + offset) % (Math.PI * 2);
-		debug(v + '\n' + Math.abs(v * 180 / Math.PI));
 		// canvases.minimap.render(function(ctx) {
 		// 	ctx.strokeStyle = 'rgba(255,0,0,1)';
 		// 	// ctx.strokeStyle = 'rgba(255,0,0,0.1)';
@@ -334,7 +340,7 @@ function render() {
 		if((hit = rayCast(player, v, map))) {
 			canvases.minimap.render(function(ctx) {
 				// ctx.strokeStyle = 'rgba(0,0,0,1)';
-				ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+				ctx.strokeStyle = 'rgba(0,0,0,0.01)';
 				ctx.beginPath();
 				ctx.moveTo(hit.origin.x * minimap.scale.x, hit.origin.y * minimap.scale.y);
 				ctx.lineTo(hit.pos.x * minimap.scale.x, hit.pos.y * minimap.scale.y);
@@ -365,8 +371,6 @@ function rayCast(origin, angle, map) {
 			? hitX.dist() < hitY.dist() ? hitX : hitY
 			: hitX ? hitX : hitY;
 	}
-	// return hitX;
-	// return hitY;
 }
 // function rayCast(origin, angle, map) {
 // 	var tanV = Math.tan(angle),
@@ -459,5 +463,5 @@ function debugHit(tile, x, y) {
 	// });
 }
 function debug(text) {
-	// $('#debug').text(text);
+	$('#debug').text(text);
 }
