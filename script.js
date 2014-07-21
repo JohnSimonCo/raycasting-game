@@ -1,6 +1,8 @@
 //http://www.permadi.com/tutorial/raycast/rayc9.html
 //http://dev.opera.com/articles/3d-games-with-canvas-and-raycasting-part-1/
-//http://www.benjoffe.com/script/canvascape/main.js
+//http://www.benjoffe.com/script/canvascape/main.
+//http://lodev.org/cgtutor/
+//https://www.youtube.com/watch?v=-5nhdEDGaws
 
 function Vec2(x, y) {
 	this.x = x;
@@ -77,11 +79,12 @@ $.extend(Map, {
 	}
 });
 
-function RayCastHit(origin, pos, v, tile) {
+function RayCastHit(origin, pos, v, tile, offset) {
 	this.origin = origin;
 	this.pos = pos;
 	this.v = v;
 	this.tile = tile;
+	this.offset = offset;
 }
 RayCastHit.prototype = {
 	render: function(ctx) {
@@ -161,11 +164,14 @@ var canvases = {
 	minimap: new Canvas('#minimap')
 }
 
+var texture = $('.texture')[0];
+var textureScale = texture.height / map.tileHeight;
+
 var screen = {
-	// width: 640,
-	// height: 400,
-	width: 1280,
-	height: 800,
+	width: 800,
+	height: 600,
+	// width: 1280,
+	// height: 800,
 	fov: Math.PI / 180 * 60
 }
 screen.halfWidth =  screen.width / 2;
@@ -333,14 +339,14 @@ function render() {
 		// 	ctx.strokeStyle = 'rgba(255,0,0,1)';
 		// 	// ctx.strokeStyle = 'rgba(255,0,0,0.1)';
 		// 	ctx.beginPath();
-		// 	ctx.moveTo(player.x * minimap.scale.x, player.y * minimap.scale.y);
+		// 	ctx.moveTo(player.x * minimap.scale.xc, player.y * minimap.scale.y);
 		// 	ctx.lineTo(player.x * minimap.scale.x + Math.cos(v) * 50, player.y * minimap.scale.y + Math.sin(v) * 50);
 		// 	ctx.stroke();
 		// });
 		if((hit = rayCast(player, v, map))) {
 			canvases.minimap.render(function(ctx) {
 				// ctx.strokeStyle = 'rgba(0,0,0,1)';
-				ctx.strokeStyle = 'rgba(0,0,0,0.01)';
+				ctx.strokeStyle = 'rgba(0,0,0,0.1)';
 				ctx.beginPath();
 				ctx.moveTo(hit.origin.x * minimap.scale.x, hit.origin.y * minimap.scale.y);
 				ctx.lineTo(hit.pos.x * minimap.scale.x, hit.pos.y * minimap.scale.y);
@@ -353,9 +359,11 @@ function render() {
 
 				ctx.fillStyle = '#3f51b5';
 				// ctx.fillStyle = '#fff';
-				ctx.fillRect(x, position, 1, height);
+				// ctx.fillRect(x, position, 1, height);
+				ctx.drawImage(texture, Math.floor(hit.offset * textureScale), 0, 1, texture.height, x, position, 1, height);
+				// console.log(hit.offset);
 				ctx.fillStyle = 'rgba(0,0,0,' + dist / 150 + ')';
-				ctx.fillRect(x, position, 1, height);
+				// ctx.fillRect(x, position, 1, height);
 			});
 		}
 	}
@@ -412,7 +420,7 @@ function rayCastX(o, v, tanV, absV, Ty, map) {
 	debugHit(tile, x, y);
 
 	//Return the hit if there's a wall there
-	if(tile) return new RayCastHit(o, new Vec2(x, y), v, tile);
+	if(tile) return new RayCastHit(o, new Vec2(x, y), v, tile, x % Ty);
 
 	//Calculate step in x- and y-axis
 	var ya = up ? -Ty : Ty, xa = ya / tanV;
@@ -422,7 +430,7 @@ function rayCastX(o, v, tanV, absV, Ty, map) {
 		tile = map.tileAt(x, y - tileOffs);
 		debugHit(tile, x, y);
 		//If a wall is found, return the hit
-		if(tile) return new RayCastHit(o, new Vec2(x, y), v, tile);
+		if(tile) return new RayCastHit(o, new Vec2(x, y), v, tile, x % Ty);
 	}
 }
 
@@ -441,7 +449,7 @@ function rayCastY(o, v, tanV, absV, Tx, map) {
 	debugHit(tile, x, y);
 
 	//Return the hit if there's a wall there
-	if(tile) return new RayCastHit(o, new Vec2(x, y), v, tile);
+	if(tile) return new RayCastHit(o, new Vec2(x, y), v, tile, y % Tx);
 
 	//Calculate step in x- and y-axis
 	var xa = left ? -Tx : Tx, ya = xa * tanV;
@@ -452,7 +460,7 @@ function rayCastY(o, v, tanV, absV, Tx, map) {
 		debugHit(tile, x, y);
 		
 		//If a wall is found, return the hit
-		if(tile) return new RayCastHit(o, new Vec2(x, y), v, tile);
+		if(tile) return new RayCastHit(o, new Vec2(x, y), v, tile, y % Tx);
 	}
 }
 
