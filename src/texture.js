@@ -11,7 +11,7 @@ function Texture(image, scaleWidth, scaleHeight) {
 	this.canvas.height = this.height;
 	this.ctx = this.canvas.getContext('2d');
 	this.ctx.drawImage(image, 0, 0);
-	this.imageData = this.ctx.getImageData(0, 0, this.width, this.height);
+	// this.imageData = this.ctx.getImageData(0, 0, this.width, this.height);
 }
 Texture.prototype = {
 	getX: function(offset) {

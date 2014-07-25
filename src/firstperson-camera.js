@@ -31,7 +31,7 @@ FirstPersonCamera.prototype = {
 	render: function() {
 		this.clear();
 		var ctx = this.ctx,
-			imageData = ctx.getImageData(0, 0, this.width, this.height),
+			// imageData = ctx.getImageData(0, 0, this.width, this.height),
 			entity = this.entity,
 			offset = -this.halfFov,
 			v, hit,
@@ -53,52 +53,52 @@ FirstPersonCamera.prototype = {
 				// ctx.fillStyle = '#3f51b5';
 				// ctx.fillStyle = 'rgba(0,0,0,0.1)';
 				// ctx.fillRect(x, y, 1, height);
-				// ctx.drawImage(tile.texture.image, tile.texture.getX(hit.offset), 0, 1, tile.texture.height, x, y, 1, height);
+				ctx.drawImage(tile.texture.image, tile.texture.getX(hit.offset), 0, 1, tile.texture.height, x, y, 1, height);
 				// ctx.fillStyle = 'rgba(0,0,0,' + dist / 150 + ')';
 				// ctx.fillRect(x, y, 1, height);
 
 
 				// if(offset === 0) {
-					y = this.centerY + halfHeight;
-					quota = player.height * this.dist / Math.cos(offset);
-					cosV = Math.cos(v);
-					sinV = Math.sin(v);
+					// y = this.centerY + halfHeight;
+					// quota = player.height * this.dist / Math.cos(offset);
+					// cosV = Math.cos(v);
+					// sinV = Math.sin(v);
 					
-					for(; y < this.height; y++) {
-						if((floorHit = floorCast(y - (this.centerY), quota, cosV, sinV))) {
-							floorTile = floorHit.tile;
+					// for(; y < this.height; y++) {
+					// 	if((floorHit = floorCast(y - (this.centerY), quota, cosV, sinV))) {
+					// 		floorTile = floorHit.tile;
 
-							screenIndex = Texture.getPixelIndex(x, y, this.width);
-							textureIndex = Texture.getPixelIndex(floorTile.texture.getX(floorHit.offsetX), floorTile.texture.getY(floorHit.offsetY), floorTile.texture.width);
+					// 		screenIndex = Texture.getPixelIndex(x, y, this.width);
+					// 		textureIndex = Texture.getPixelIndex(floorTile.texture.getX(floorHit.offsetX), floorTile.texture.getY(floorHit.offsetY), floorTile.texture.width);
 
-							for(var i = 0; i < 4; i++) {
-								imageData.data[screenIndex + i] = floorTile.texture.imageData.data[textureIndex + i];
-							}
+					// 		for(var i = 0; i < 4; i++) {
+					// 			imageData.data[screenIndex + i] = floorTile.texture.imageData.data[textureIndex + i];
+					// 		}
 
 		
-							// ctx.drawImage(floorTile.texture.image, floorTile.texture.getX(floorHit.offsetX), floorTile.texture.getY(floorHit.offsetY), 1, 1, x, y, 1, 1);
-						}
-						// canvases.minimap.render(function(ctx) {
-						// 	ctx.strokeStyle = 'rgba(255,0,0,1)';
-						// 	ctx.strokeStyle = 'rgba(255,0,0,0.1)';
-						// 	ctx.beginPath();
-						// 	ctx.moveTo(player.x * minimap.scale.xc, player.y * minimap.scale.y);
-						// 	ctx.lineTo(player.x * minimap.scale.x + Math.cos(v) * 50, player.y * minimap.scale.y + Math.sin(v) * 50);
-						// 	ctx.stroke();
-						// });
-						// canvases.minimap.render(function(ctx) {
-						// 	var lel = 255 - Math.floor(floorHit.dist);
-						// 	ctx.fillStyle = 'rgb(' + lel+','+lel+','+lel+')';
-						// 	ctx.fillRect(floorHit.pos.x * minimap.scale.x - 3, floorHit.pos.y * minimap.scale.y, 6, 1);
-						// });
-					}
+					// 		// ctx.drawImage(floorTile.texture.image, floorTile.texture.getX(floorHit.offsetX), floorTile.texture.getY(floorHit.offsetY), 1, 1, x, y, 1, 1);
+					// 	}
+					// 	// canvases.minimap.render(function(ctx) {
+					// 	// 	ctx.strokeStyle = 'rgba(255,0,0,1)';
+					// 	// 	ctx.strokeStyle = 'rgba(255,0,0,0.1)';
+					// 	// 	ctx.beginPath();
+					// 	// 	ctx.moveTo(player.x * minimap.scale.xc, player.y * minimap.scale.y);
+					// 	// 	ctx.lineTo(player.x * minimap.scale.x + Math.cos(v) * 50, player.y * minimap.scale.y + Math.sin(v) * 50);
+					// 	// 	ctx.stroke();
+					// 	// });
+					// 	// canvases.minimap.render(function(ctx) {
+					// 	// 	var lel = 255 - Math.floor(floorHit.dist);
+					// 	// 	ctx.fillStyle = 'rgb(' + lel+','+lel+','+lel+')';
+					// 	// 	ctx.fillRect(floorHit.pos.x * minimap.scale.x - 3, floorHit.pos.y * minimap.scale.y, 6, 1);
+					// 	// });
+					// }
 				// }
 			}
 
 			offset += this.dirStep;
 		}
 
-		ctx.putImageData(imageData, 0, 0);
+		// ctx.putImageData(imageData, 0, 0);
 
 	},
 	clear: function() {

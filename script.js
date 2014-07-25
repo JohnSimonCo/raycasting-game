@@ -93,8 +93,8 @@ function update(delta, time) {
 }
 
 function render() {
-	// playerCamera.render();
-	// minimapCamera.render();
+	playerCamera.render();
+	minimapCamera.render();
 }
 
 

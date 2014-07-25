@@ -7,11 +7,11 @@ function Player(x, y) {
 $.extend(Player.prototype, Vec2.prototype, {
 	update: function(delta, time) {
 		if(input.mouseDeltaX) {
-			this.dir += input.mouseDeltaX * 0.03;
+			this.dir += input.mouseDeltaX * 0.04;
 			input.mouseDeltaX = 0;
 		}
 		if(input.mouseDeltaY) {
-			playerCamera.setOffset(playerCamera.offset - input.mouseDeltaY * 5);
+			playerCamera.setOffset(playerCamera.offset - input.mouseDeltaY * 12);
 			// this.height = Math2.clamp(this.height - input.mouseDeltaY, 0, 64);
 			// this.look = this.height - 32;
 			debug('height: ' + this.height + '\nlook: ' + this.look);
