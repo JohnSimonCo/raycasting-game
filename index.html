@@ -3,16 +3,40 @@
 <head>
 	<title></title>
 	<link rel="stylesheet" type="text/css" href="style.css">
-	<script type="text/javascript" src="jquery.js"></script>
-	<script type="text/javascript" src="angular.js"></script>
-	<script type="text/javascript" src="inputmanager.js"></script>
+	<script type="text/javascript" src="lib/jquery.js"></script>
+	<script type="text/javascript" src="lib/inputmanager.js"></script>
 </head>
 <body>
-	<canvas id="game" width="800px" height="600px"></canvas>
+	<canvas id="game" width="640px" height="400px"></canvas>
 	<canvas id="minimap" width="120px" height="120px"></canvas>
-	<img src="texture.png" class="texture">
+	<img src="res/wall1.jpg" class="texture wall-texture">
+	<img src="res/wall2.jpg" class="texture wall-texture">
+
+	<!-- <img src="res/floor.png" class="texture floor-texture"> -->
+	<img src="res/floor1.jpg" class="texture floor-texture">
+	<img src="res/floor2.gif" class="texture floor-texture">
+	<img src="res/wall1.jpg" class="texture floor-texture">
+
 	<pre id="debug"></pre>
 	<!-- <canvas id="minimap" width="720px" height="720px"></canvas> -->
+	<script type="text/javascript" src="src/vec2.js"></script>
+	<script type="text/javascript" src="src/math2.js"></script>
+
+	<script type="text/javascript" src="src/floorcast.js"></script>
+	<script type="text/javascript" src="src/floorcast-hit.js"></script>
+	<script type="text/javascript" src="src/raycast.js"></script>
+	<script type="text/javascript" src="src/raycast-hit.js"></script>
+
+	<script type="text/javascript" src="src/texture.js"></script>
+	<script type="text/javascript" src="src/tile.js"></script>
+	<script type="text/javascript" src="src/grid.js"></script>
+
+	<script type="text/javascript" src="src/input.js"></script>
+	<script type="text/javascript" src="src/player.js"></script>
+
+	<script type="text/javascript" src="src/firstperson-camera.js"></script>
+	<script type="text/javascript" src="src/minimap-camera.js"></script>
+
 	<script type="text/javascript" src="script.js"></script>
 </body>
 </html>
