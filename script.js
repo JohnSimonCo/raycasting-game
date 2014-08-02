@@ -71,7 +71,8 @@ var player = new Player(
 	map.tileHeight * map.tiles[0].length / 2
 );
 
-var playerCamera = new FirstPersonCamera($('canvas#game'), map, player);
+
+var camera = new Camera($('canvas#game'), map);
 
 var minimapCamera = new MinimapCamera($('canvas#minimap'), minimap, map);
 
@@ -93,8 +94,10 @@ function update(delta, time) {
 }
 
 function render() {
-	playerCamera.render();
-	minimapCamera.render();
+	var raycastResults = raycast(camera, player, map);
+
+	camera.render(raycastResults);
+	minimapCamera.render(raycastResults);
 }
 
 

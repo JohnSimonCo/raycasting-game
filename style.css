@@ -1,13 +1,31 @@
-#minimap {
+#game-container {
+	position: relative;
+	width: 320px;
+	height: 200px;
+	overflow: hidden;
+}
+#game-container > * {
 	position: absolute;
-	top: 20px;
-	left: 20px;
-	z-index: 1;
+	top: 0px;
+	left: 0px;
+}
+#floor {
+	bottom: 0px;
+	top: initial;
+
+	width: 100%;
+	height: 50%;
+	transform: rotateX(45deg);
+}
+#minimap {
+	margin-top: 20px;
+	margin-left: 20px;
+	background: white;
 }
 #debug {
 	position: absolute;
 	bottom: 0;
 }
-.texture {
+#textures {
 	display: none;
 }

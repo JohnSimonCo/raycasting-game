@@ -12,7 +12,7 @@ function MinimapCamera($canvas, minimap, map) {
 	this.scaleY = this.height / map.height;
 }
 MinimapCamera.prototype = {
-	render: function() {
+	render: function(raycastResult) {
 		var ctx = this.ctx, minimap = this.minimap;
 
 		ctx.fillStyle = '#fff';
@@ -22,8 +22,8 @@ MinimapCamera.prototype = {
 		// 	ctx.strokeStyle = 'rgba(255,0,0,1)';
 		// 	// ctx.strokeStyle = 'rgba(255,0,0,0.1)';
 		// 	ctx.beginPath();
-		// 	ctx.moveTo(player.x * minimap.scale.x, player.y * minimap.scale.y);
-		// 	ctx.lineTo(player.x * minimap.scale.x + Math.cos(v) * 50, player.y * minimap.scale.y + Math.sin(v) * 50);
+		// 	ctx.moveTo(player.x * minimap.scaleX, player.y * minimap.scaleY);
+		// 	ctx.lineTo(player.x * minimap.scaleX + Math.cos(v) * 50, player.y * minimap.scaleY + Math.sin(v) * 50);
 		// 	ctx.stroke();
 		// });
 
@@ -31,8 +31,8 @@ MinimapCamera.prototype = {
 		// 	// ctx.strokeStyle = 'rgba(0,0,0,1)';
 		// 	ctx.strokeStyle = 'rgba(0,0,0,0.1)';
 		// 	ctx.beginPath();
-		// 	ctx.moveTo(hit.origin.x * minimap.scale.x, hit.origin.y * minimap.scale.y);
-		// 	ctx.lineTo(hit.pos.x * minimap.scale.x, hit.pos.y * minimap.scale.y);
+		// 	ctx.moveTo(hit.origin.x * minimap.scaleX, hit.origin.y * minimap.scaleY);
+		// 	ctx.lineTo(hit.pos.x * minimap.scaleX, hit.pos.y * minimap.scaleY);
 		// 	ctx.stroke();
 		// });
 
@@ -45,6 +45,20 @@ MinimapCamera.prototype = {
 					ctx.fillStyle = tile.color;
 					ctx.fillRect(pos.x, pos.y, minimap.tileWidth, minimap.tileHeight);
 				}
+			}
+		}
+
+		var rcr, hit;
+		for(x = 0; x < raycastResult.length; x++) {
+			rcr = raycastResult[x];
+			if(rcr.hit) {
+				hit = rcr.hit;
+					// ctx.strokeStyle = 'rgba(0,0,0,1)';
+					ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+					ctx.beginPath();
+					ctx.moveTo(hit.origin.x * this.scaleX, hit.origin.y * this.scaleY);
+					ctx.lineTo(hit.pos.x * this.scaleX, hit.pos.y * this.scaleY);
+					ctx.stroke();
 			}
 		}
 

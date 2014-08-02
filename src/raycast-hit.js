@@ -1,11 +1,11 @@
-function RayCastHit(origin, pos, v, tile, offset) {
+function RaycastHit(origin, pos, v, tile, offset) {
 	this.origin = origin;
 	this.pos = pos;
 	this.v = v;
 	this.tile = tile;
 	this.offset = offset;
 }
-RayCastHit.prototype = {
+RaycastHit.prototype = {
 	render: function(ctx) {
 		ctx.strokeStyle = 'rgba(0,0,0,0.1)';
 		ctx.beginPath();

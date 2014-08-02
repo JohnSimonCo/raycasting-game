@@ -6,17 +6,17 @@ function Player(x, y) {
 }
 $.extend(Player.prototype, Vec2.prototype, {
 	update: function(delta, time) {
-		if(input.mouseDeltaX) {
-			this.dir += input.mouseDeltaX * 0.04;
-			input.mouseDeltaX = 0;
-		}
-		if(input.mouseDeltaY) {
-			playerCamera.setOffset(playerCamera.offset - input.mouseDeltaY * 12);
-			// this.height = Math2.clamp(this.height - input.mouseDeltaY, 0, 64);
-			// this.look = this.height - 32;
-			debug('height: ' + this.height + '\nlook: ' + this.look);
-			input.mouseDeltaY = 0;
-		}
+		// if(input.mouseDeltaX) {
+		// 	this.dir += input.mouseDeltaX * 0.04;
+		// 	input.mouseDeltaX = 0;
+		// }
+		// if(input.mouseDeltaY) {
+		// 	camera.setOffset(camera.offset - input.mouseDeltaY * 12);
+		// 	// this.height = Math2.clamp(this.height - input.mouseDeltaY, 0, 64);
+		// 	// this.look = this.height - 32;
+		// 	debug('height: ' + this.height + '\nlook: ' + this.look);
+		// 	input.mouseDeltaY = 0;
+		// }
 
 		if(input.rotate) {
 			this.dir += input.rotate * Math.PI / 180 * 5;
@@ -30,7 +30,7 @@ $.extend(Player.prototype, Vec2.prototype, {
 		}
 	},
 	move: function(angle, delta) {
-		var hit = rayCast(this, angle, map),
+		var hit = map.raycast(this, angle, map),
 			speed = hit ? Math.min(this.speed * delta, hit.dist() - Math2.epsilon) : this.speed * delta;
 		
 		this.x += Math.cos(angle) * speed;
