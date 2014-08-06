@@ -1,7 +1,7 @@
 #game-container {
 	position: relative;
-	width: 320px;
-	height: 200px;
+	width: 1280px;
+	height: 800px;
 	overflow: hidden;
 }
 #game-container > * {
@@ -9,13 +9,36 @@
 	top: 0px;
 	left: 0px;
 }
+.ceil-floor {
+	width: 100%;
+	height: 50%;
+}
 #floor {
 	bottom: 0px;
 	top: initial;
+	height: 150%;
 
-	width: 100%;
-	height: 50%;
-	transform: rotateX(45deg);
+	background: #636363;
+	background: -moz-radial-gradient(center, ellipse cover, #636363 0%, #000000 100%);
+	background: -webkit-gradient(radial, center center, 0px, center center, 100%, , color-stop(0%, #636363), color-stop(100%, #000000));
+	background: -webkit-radial-gradient(center, ellipse cover, #636363 0%, #000000 100%);
+	background: -o-radial-gradient(center, ellipse cover, #636363 0%, #000000 100%);
+	background: -ms-radial-gradient(center, ellipse cover, #636363 0%, #000000 100%);
+	background: radial-gradient(ellipse at center, #636363 0%, #000000 100%);
+}
+#ceiling {
+	background: #410306; /* Old browsers */
+	background: -moz-linear-gradient(top,  #410306 0%, #630509 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#410306), color-stop(100%,#630509)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top,  #410306 0%,#630509 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top,  #410306 0%,#630509 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top,  #410306 0%,#630509 100%); /* IE10+ */
+	background: linear-gradient(to bottom,  #410306 0%,#630509 100%); /* W3C */
+
+	top: 0px;
+	bottom: initial;
+}
+#game {
 }
 #minimap {
 	margin-top: 20px;
@@ -25,6 +48,13 @@
 #debug {
 	position: absolute;
 	bottom: 0;
+
+	color: white;
+	text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
 }
 #textures {
 	display: none;

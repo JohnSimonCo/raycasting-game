@@ -3,6 +3,7 @@
 //http://www.benjoffe.com/script/canvascape/main.
 //http://lodev.org/cgtutor/
 //https://www.youtube.com/watch?v=-5nhdEDGaws
+//http://www.playmycode.com/play/game/joe/raycaster
 var wallImages = $('.wall-texture');
 
 var wallTextures = [
@@ -71,6 +72,13 @@ var player = new Player(
 	map.tileHeight * map.tiles[0].length / 2
 );
 
+var sprites = [
+	new Vec2(player.pos.x - 10, player.pos.y - 10)
+]
+
+// var lights = [
+// 	new Light(player.x, player.y, 0.5)
+// ]
 
 var camera = new Camera($('canvas#game'), map);
 
@@ -80,7 +88,7 @@ var lastTime;
 function frame(time) {
 	var delta = lastTime ? time - lastTime : 0;
 
-	update(delta / 100, time);
+	update(Math.min(delta / 100, 0.6), time);
 
 	lastTime = time;
 	requestAnimationFrame(frame);

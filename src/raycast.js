@@ -6,7 +6,7 @@ function raycast(camera, entity, map) {
 	for(var x = 0; x < camera.width; x++) {
 		v = (entity.dir + offset) % (Math.PI * 2);
 
-		if((hit = map.raycast(entity, v, map))) {
+		if((hit = map.raycast(entity.pos, v, map))) {
 			dist = hit.realDist(offset);
 			height = Math.floor(map.tileHeight / dist * camera.dist);
 

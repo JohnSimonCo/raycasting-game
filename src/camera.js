@@ -3,6 +3,9 @@ function Camera($canvas, map, fov) {
 	this.canvas = $canvas[0];
 	this.ctx = this.canvas.getContext('2d');
 
+	this.floor = $('#floor');
+	this.ceiling = $('#ceiling');
+
 	this.map = map;
 
 	this.width = this.canvas.width;
@@ -36,11 +39,13 @@ Camera.prototype = {
 		// 	textureIndex, screenIndex;
 
 
-		var ctx = this.ctx, x = 0, y, rcr, hit, tile;
+		var ctx = this.ctx, zBuffer = [], x = 0, y, rcr, hit, tile;
 
 		for(; x < raycastResult.length; x++) {
 			rcr = raycastResult[x];
 			if(rcr.hit) {
+				zBuffer[x] = rcr.dist;
+
 				y = this.centerY - rcr.halfHeight;
 				hit = rcr.hit;
 				tile = hit.tile;
@@ -49,12 +54,49 @@ Camera.prototype = {
 				// ctx.fillStyle = 'rgba(0,0,0,0.1)';
 				// ctx.fillRect(x, y, 1, height);
 				ctx.drawImage(tile.texture.image, tile.texture.getX(hit.offset), 0, 1, tile.texture.height, x, y, 1, rcr.height);
-				// ctx.fillStyle = 'rgba(0,0,0,' + dist / 150 + ')';
-				// ctx.fillRect(x, y, 1, height);
+				// ctx.fillStyle = 'rgba(0,0,0,' + rcr.dist / 500 + ')';
+				// ctx.fillRect(x, y, 1, rcr.height);
 			}
 		}
 
-		// $('#floor').height(this.halfHeight - this.offset);
+		// var distMap = {}, spriteArray;
+
+		// spriteArray = sprites.map(function(sprite) {
+		// 	var dir = player.pos.subtract(sprite);
+		// 	return {
+		// 		dir: dir,
+		// 		dist: dir.length(),
+		// 		sprite: sprite
+		// 	};
+		// })
+		// .sort(function(s1, s2) {
+		// 	return s1.dist - s2.dist;
+		// });
+
+		// var item;
+		// for(var i = 0; i < spriteArray.length; i++) {
+		// 	item = spriteArray[i];
+		// 	var angle = Math.atan2(item.dir.y, item.dir.x) - player.dir,
+		// 		size = this.dist / (Math.cos(angle) * item.dist);
+
+		// 	if(size <= 0) continue;
+
+		// 	var x = Math.tan(angle) * this.dist,
+		// 		y = this.halfHeight - size / 2;
+
+		// 	ctx.drawImage(wallImages[0], x, y, size, size);
+
+		// }
+
+
+
+
+		var floorHeight = this.halfHeight - this.offset;
+		this.floor.height(floorHeight * 2);
+		this.floor.css('bottom', -floorHeight + 'px');
+		this.ceiling.height(this.halfHeight + this.offset);
+
+
 
 
 
